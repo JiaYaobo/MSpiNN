@@ -10,7 +10,7 @@ import optax
 from jax import vmap
 
 from model import FNN
-from train_step import make_step_adam_prox
+from train_step import make_step
 from data_generator import dataloader
 from altermin_schedular import allocate_model, collect_data_groups
 from metrics import RMSELoss
@@ -134,7 +134,7 @@ for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
     y_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
         xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
-        yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
+        yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step(
                 models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
 
         y_pred = jnp.concatenate([y_pred, yi_pred])

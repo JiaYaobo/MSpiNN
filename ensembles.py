@@ -7,7 +7,6 @@ from sklearn.ensemble import BaggingRegressor
 
 from metrics import RMSELoss
 
-
 rf = RandomForestRegressor()
 ar = AdaBoostRegressor()
 br = BaggingRegressor()
@@ -68,6 +67,6 @@ y_pred_br = br.predict(x_test)
 ar.fit(x_train, y_train)
 y_pred_ar = ar.predict(x_test)
 
-print(RMSELoss(y_test, y_pred_rf))
-print(RMSELoss(y_test, y_pred_ar))
-print(RMSELoss(y_test, y_pred_br))
+print(f"Random Forest RMSE: {RMSELoss(y_test, y_pred_rf)}")
+print(f"AdaBoost RMSE: {RMSELoss(y_test, y_pred_ar)}")
+print(f"Bagging RMSE {RMSELoss(y_test, y_pred_br)}")

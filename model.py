@@ -106,7 +106,7 @@ class FNN(eqx.Module):
         for i in range(len(self.layers) - 1):
             x = self.layers[i](x)
         x = self.layers[-1](x)
-        x = self.final_activation(x)
+        # x = self.final_activation(x)
         return x
 
     
