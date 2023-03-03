@@ -102,18 +102,11 @@ for i in range(args.k):
     opt_states.append(opt_state)
     optims.append(optim)
 
-if args.linear:
-    from linear_func import func1, func2
-else:
-    from nonlinear_func import func1, func2
-
 train_data_file = './data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
 test_data_file = './data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
 
-
 train_df = pd.read_csv(train_data_file)
 test_df = pd.read_csv(test_data_file)
-
 
 x_train = train_df.iloc[:,1:(args.num_p+1)].values
 y_train = train_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
@@ -124,7 +117,6 @@ y_test= test_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
 group_test= test_df.iloc[:,202].values.reshape(-1, 1)
 
 lr = args.init_learn_rate
-
 
 for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
             [x_train, y_train, group_train], args.batch_size, key=loader_key)
