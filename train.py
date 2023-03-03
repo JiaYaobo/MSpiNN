@@ -12,7 +12,7 @@ from model import FNN
 from train_step import make_step_adam_prox
 from data_generator import dataloader, get_dataset
 from altermin_schedular import allocate_model, collect_data_groups
-from metrics import MSELoss, RMSELoss
+from metrics import RMSELoss
 
 
 def TestLoss(models, x_test, y_test, group_test):

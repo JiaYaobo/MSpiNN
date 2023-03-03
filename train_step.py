@@ -1,11 +1,9 @@
-import numpy as np
 import jax.numpy as jnp
 import jax.tree_util as jtu
 import equinox as eqx
 
 from model import FNN
 from loss import all_pen_loss, mse_loss
-from data_generator import DataGenerator
 
 
 
