@@ -1,0 +1,1 @@
+python -u train.py --layer_sizes 200 30 --decay 0.98 --n_train_obs 300 --batch_size 300 --linear
