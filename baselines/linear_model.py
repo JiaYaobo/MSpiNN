@@ -33,10 +33,10 @@ def TestLoss(models, x_test, y_test, group_test):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--layer_sizes', '--list',
-                    nargs='+',  type=int, default=[200, 30])
+                    nargs='+',  type=int, default=[200])
 parser.add_argument('--data_classes', type=int, default=1)
 parser.add_argument('--layer_nums', type=int)
-parser.add_argument('--init_learn_rate', type=float, default=2e-4)
+parser.add_argument('--init_learn_rate', type=float, default=1e-4)
 parser.add_argument('--adam_learn_rate', type=float, default=1e-2)
 parser.add_argument('--adam_epsilon', type=float, default=1e-8)
 parser.add_argument('--is_relu', type=int, default=1, choices=[0, 1])

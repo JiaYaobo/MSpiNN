@@ -24,7 +24,7 @@ def clip_gradient(grads):
 
 
 @eqx.filter_jit
-def make_step(model: FNN, optim, opt_state, x, y, lr=None):
+def make_step(model: FNN, optim, opt_state, x, y, lr=None, decay=None):
     pred, _,  __, ___, grads = mse_loss(
         model, x, y)
     updates, opt_state = optim.update(grads, opt_state)
@@ -33,7 +33,7 @@ def make_step(model: FNN, optim, opt_state, x, y, lr=None):
 
 
 @eqx.filter_jit
-def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.01, decay=0.97):
+def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.01, decay=0.98):
     pred, all_loss, smooth_loss, unpen_loss, grads = all_pen_loss(
         model, x, y)
     updates, opt_state = optim.update(grads, opt_state)
@@ -64,7 +64,7 @@ def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.01, decay=0.97)
 
 
 @eqx.filter_jit
-def make_step_prox(model: FNN, optim, opt_state, x, y, lr=None):
+def make_step_prox(model: FNN, optim, opt_state, x, y, lr=None, decay=0.98):
     pred, all_loss, smooth_loss, unpen_loss, grads = all_pen_loss(
         model, x, y)
     updates = jtu.tree_map(lambda g: model.lasso_param * lr * g, grads)
@@ -87,6 +87,9 @@ def make_step_prox(model: FNN, optim, opt_state, x, y, lr=None):
     values[0] = weights_updated - model.layers[0].weight
     updates = jtu.tree_unflatten(treedef, values)
     model = eqx.apply_updates(model, updates)
+
+    lr = lr * decay
+
     return pred, all_loss, smooth_loss, unpen_loss, model, opt_state, lr
 
 
