@@ -36,7 +36,7 @@ parser.add_argument('--layer_sizes', '--list',
                     nargs='+',  type=int, default=[200, 30])
 parser.add_argument('--data_classes', type=int, default=1)
 parser.add_argument('--layer_nums', type=int)
-parser.add_argument('--init_learn_rate', type=float, default=2e-4)
+parser.add_argument('--init_learn_rate', type=float, default=1e-4)
 parser.add_argument('--adam_learn_rate', type=float, default=1e-2)
 parser.add_argument('--adam_epsilon', type=float, default=1e-8)
 parser.add_argument('--is_relu', type=int, default=1, choices=[0, 1])
@@ -46,7 +46,7 @@ parser.add_argument('--lasso_param_ratio', type=float, default=0.1)
 parser.add_argument('--group_lasso_param', type=float, default=0.98)
 parser.add_argument('--decay', type=float, default=0.98)
 parser.add_argument('--batch_size', type=int, default=300)
-parser.add_argument('--n_epochs', type=int, default=200)
+parser.add_argument('--n_epochs', type=int, default=400)
 parser.add_argument('--seed', type=int, default=20010218)
 parser.add_argument('--num_p', type=int, default=200)
 parser.add_argument('--num_groups', type=int, default=2) 
@@ -114,20 +114,20 @@ for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
     y_pred = np.array([]).reshape(0, 1)
     y_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
-        if step + 1 <= 50:
-            xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
-            yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step(
-                    models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
+        # if step + 1 <= 30:
+        #     xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
+        #     yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step(
+        #             models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
 
-            y_pred = jnp.concatenate([y_pred, yi_pred])
-            y_true = jnp.concatenate([y_true, yi_])
-        else:
-            xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
-            yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
-                    models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
+        #     y_pred = jnp.concatenate([y_pred, yi_pred])
+        #     y_true = jnp.concatenate([y_true, yi_])
+        # else:
+        xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
+        yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
+                models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
 
-            y_pred = jnp.concatenate([y_pred, yi_pred])
-            y_true = jnp.concatenate([y_true, yi_])
+        y_pred = jnp.concatenate([y_pred, yi_pred])
+        y_true = jnp.concatenate([y_true, yi_])
 
     train_loss = RMSELoss(y_pred, y_true)
 
