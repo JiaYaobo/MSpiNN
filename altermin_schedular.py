@@ -9,7 +9,7 @@ from model import FNN
 @jit
 def HuberLoss(y_pred, y_true):
     abs_err = jnp.abs(y_pred - y_true)
-    delta = 1.4826 * jnp.mean(abs_err)
+    delta = 1.4826 * jnp.mean(abs_err) * 1.345
     loss = jnp.where(abs_err < delta, 
                     1/2 * abs_err ** 2, 
                     delta * abs_err - 1/2 * delta ** 2)

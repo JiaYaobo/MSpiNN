@@ -2,6 +2,7 @@ import argparse
 from typing import Sequence
 
 import numpy as np
+import pandas as pd
 import jax.numpy as jnp
 import jax.random as jrand
 import equinox as eqx
@@ -9,8 +10,8 @@ import optax
 from jax import vmap
 
 from model import FNN
-from train_step import make_step_adam_prox, make_step
-from data_generator import dataloader, get_dataset
+from train_step import make_step_adam_prox
+from data_generator import dataloader
 from altermin_schedular import allocate_model, collect_data_groups
 from metrics import RMSELoss
 
@@ -36,17 +37,17 @@ parser.add_argument('--layer_sizes', '--list',
                     nargs='+',  type=int, default=[200])
 parser.add_argument('--data_classes', type=int, default=1)
 parser.add_argument('--layer_nums', type=int)
-parser.add_argument('--init_learn_rate', type=float, default=1e-4)
+parser.add_argument('--init_learn_rate', type=float, default=3e-4)
 parser.add_argument('--adam_learn_rate', type=float, default=1e-2)
 parser.add_argument('--adam_epsilon', type=float, default=1e-8)
 parser.add_argument('--is_relu', type=int, default=1, choices=[0, 1])
 parser.add_argument('--use_bias', type=str)
-parser.add_argument('--ridge_param', type=float, default=0.1)
+parser.add_argument('--ridge_param', type=float, default=0.01)
 parser.add_argument('--lasso_param_ratio', type=float, default=0.1)
 parser.add_argument('--group_lasso_param', type=float, default=0.98)
-parser.add_argument('--decay', type=float, default=0.98)
+parser.add_argument('--decay', type=float, default=0.97)
 parser.add_argument('--batch_size', type=int, default=300)
-parser.add_argument('--n_epochs', type=int, default=200)
+parser.add_argument('--n_epochs', type=int, default=400)
 parser.add_argument('--seed', type=int, default=20010218)
 parser.add_argument('--num_p', type=int, default=200)
 parser.add_argument('--num_groups', type=int, default=2) 
@@ -61,6 +62,16 @@ parser.add_argument('--project', type=str)
 
 
 args = parser.parse_args()
+
+if args.linear:
+    is_linear = 'linear'
+else:
+    is_linear = 'nonlinear'
+
+if args.balance == 0.5:
+    is_balance = 'balance'
+else:
+    is_balance = 'imbalance'
 
 
 key = jrand.PRNGKey(args.seed)
@@ -96,13 +107,21 @@ if args.linear:
 else:
     from nonlinear_func import func1, func2
 
-x_train, y_train, group_train = get_dataset(args.num_p, args.num_groups, 
-                    [int(args.n_train_obs*args.balance), int(args.n_train_obs * (1 - args.balance))], args.err_dist, func_list=[func1, func2])
+train_data_file = './data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
+test_data_file = './data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
 
 
-x_test, y_test, group_test = get_dataset(args.num_p, args.num_groups, 
-                    [int(args.n_train_obs*args.balance), int(args.n_train_obs * (1 - args.balance))], args.err_dist, func_list=[func1, func2])
+train_df = pd.read_csv(train_data_file)
+test_df = pd.read_csv(test_data_file)
 
+
+x_train = train_df.iloc[:,1:(args.num_p+1)].values
+y_train = train_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
+group_train = train_df.iloc[:,202].values.reshape(-1, 1)
+
+x_test= test_df.iloc[:,1:(args.num_p+1)].values
+y_test= test_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
+group_test= test_df.iloc[:,202].values.reshape(-1, 1)
 
 lr = args.init_learn_rate
 
@@ -114,20 +133,12 @@ for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
     y_pred = np.array([]).reshape(0, 1)
     y_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
-        if step + 1 <= 50:
-            xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
-            yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step(
-                    models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
+        xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
+        yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
+                models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
 
-            y_pred = jnp.concatenate([y_pred, yi_pred])
-            y_true = jnp.concatenate([y_true, yi_])
-        else:
-            xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
-            yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
-                    models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
-
-            y_pred = jnp.concatenate([y_pred, yi_pred])
-            y_true = jnp.concatenate([y_true, yi_])
+        y_pred = jnp.concatenate([y_pred, yi_pred])
+        y_true = jnp.concatenate([y_true, yi_])
 
     train_loss = RMSELoss(y_pred, y_true)
 

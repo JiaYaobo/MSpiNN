@@ -33,7 +33,7 @@ class DataGenerator:
             eps = .7 * np.random.randn(n_obs, 1).reshape(n_obs, 1) + .3 * np.random.standard_t(1, n_obs).reshape(n_obs, 1)
         else:
             eps = 0 * np.random.randn(n_obs, 1).reshape(n_obs, 1) + 1.0 * np.random.standard_t(1, n_obs).reshape(n_obs, 1)
-        y = true_ys + eps
+        y = true_ys + 0.5 * eps
         true_ys = self.func(xs)
         true_ys = np.reshape(true_ys, (true_ys.size, 1))
         y = np.array(np.random.random_sample((true_ys.size, 1)) < true_ys, dtype=int)
