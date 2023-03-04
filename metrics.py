@@ -9,6 +9,6 @@ def MSELoss(y_pred, y_true):
 def RMSELoss(y_pred, y_true):
     return jnp.sqrt(jnp.mean((y_pred - y_true) ** 2))
 
-def BIC(y_pred, y_true, num_p, k, n, supports):
-    return jnp.log(RMSELoss(y_pred, y_true)) + \
-          jnp.log(jnp.log(num_p * k)) * jnp.log(n)/n * supports
+def BIC(loss, num_p, k, n, supports, upper_size):
+    return jnp.log(loss**2) + \
+          jnp.log(jnp.log(num_p * k)) * jnp.log(n)/n * supports * upper_size

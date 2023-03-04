@@ -6,7 +6,7 @@ import pandas as pd
 from data_generator import make_dataset
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--num_p', type=int, default=200)
+parser.add_argument('--num_p', type=int, default=100)
 parser.add_argument('--num_groups', type=int, default=2) 
 parser.add_argument('--n_train_obs', type=int, default=300)
 parser.add_argument('--n_test_obs', type=int, default=100)
@@ -58,5 +58,5 @@ x_train, y_train, group_train = make_dataset(args.num_p, args.num_groups,
 
 
 data = np.hstack([x_train, y_train, group_train])
-df = pd.DataFrame(data)
+df = pd.DataFrame(data, index=None).sample(frac=1)
 df.to_csv(data_file)

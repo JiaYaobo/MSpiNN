@@ -111,12 +111,12 @@ test_df = pd.read_csv(test_data_file)
 
 
 x_train = train_df.iloc[:,1:(args.num_p+1)].values
-y_train = train_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
-group_train = train_df.iloc[:,202].values.reshape(-1, 1)
+y_train = train_df.iloc[:,101].values.reshape(-1, 1)
+group_train = train_df.iloc[:,102].values.reshape(-1, 1)
 
 x_test= test_df.iloc[:,1:(args.num_p+1)].values
-y_test= test_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
-group_test= test_df.iloc[:,202].values.reshape(-1, 1)
+y_test= test_df.iloc[:,101].values.reshape(-1, 1)
+group_test= test_df.iloc[:,102].values.reshape(-1, 1)
 
 lr = args.init_learn_rate
 
@@ -142,5 +142,3 @@ for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
     if (step + 1) % 100 == 0:
 
         print(f"{args.k}, {train_loss}, {test_loss}, {args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}")
-        for g in range(args.k):
-            print(f"model{g} support: {models[g].support()}")

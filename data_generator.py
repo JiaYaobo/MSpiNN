@@ -34,9 +34,6 @@ class DataGenerator:
         else:
             eps = 0 * np.random.randn(n_obs, 1).reshape(n_obs, 1) + 1.0 * np.random.standard_t(1, n_obs).reshape(n_obs, 1)
         y = true_ys + 0.5 * eps
-        true_ys = self.func(xs)
-        true_ys = np.reshape(true_ys, (true_ys.size, 1))
-        y = np.array(np.random.random_sample((true_ys.size, 1)) < true_ys, dtype=int)
         return Dataset(xs, y, true_ys, group=self.group)
 
 def make_dataset(num_p, num_groups, n_obs, err_dist, func_list):
@@ -62,11 +59,10 @@ def make_dataset(num_p, num_groups, n_obs, err_dist, func_list):
         x = np.vstack([dt.x, x])
         y = np.vstack([dt.y, y])
         group_ = np.ones((dt.x.shape[0], 1)) * i
-        group = np.vstack([group_, group])
+        group = np.vstack([group, group_])
 
     x = (x - x.mean()) / x.std()
     y = (y - y.mean()) / y.std()
-
 
     return x, y, group
 

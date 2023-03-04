@@ -33,20 +33,21 @@ def make_step(model: FNN, optim, opt_state, x, y, lr=None, decay=None):
 
 
 @eqx.filter_jit
-def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.01, decay=0.98):
+def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.001, decay=0.98):
     pred, all_loss, smooth_loss, unpen_loss, grads = all_pen_loss(
         model, x, y)
     updates, opt_state = optim.update(grads, opt_state)
-   # do proximal gradient step
+   # Do proximal gradient step
     values, treedef = jtu.tree_flatten(updates)
     # adam_weights = jnp.abs(values[0])
-    adam_weights = jtu.tree_flatten(opt_state[0].adam_weights)[0][0] * lr
+    sz = lr * jnp.sqrt(1 - 0.999) / (1 - 0.9)
+    adam_weights = jtu.tree_flatten(opt_state[0].adam_weights)[0][0] * sz
     # Do proximal gradient for lasso: soft threshold
     weights = model.layers[0].weight 
     weights_updated = jnp.multiply(jnp.sign(weights), jnp.maximum(
         jnp.abs(weights) - model.lasso_param  * adam_weights, 0))
 
-    # do proximal gradient step for group lasso
+    # Do proximal gradient step for group lasso
     group_norms = 1e-10 + jnp.linalg.norm(weights, axis=1).reshape(-1, 1)
     group_lasso_scale_factor = jnp.maximum(
         1 - model.group_lasso_param * adam_weights / group_norms, 0)
@@ -58,8 +59,6 @@ def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.01, decay=0.98)
     updates = jtu.tree_unflatten(treedef, values)
     model = eqx.apply_updates(model, updates)
 
-    lr = lr * decay
-
     return pred, all_loss, smooth_loss, unpen_loss, model, opt_state, lr
 
 
@@ -67,7 +66,7 @@ def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.01, decay=0.98)
 def make_step_prox(model: FNN, optim, opt_state, x, y, lr=None, decay=0.98):
     pred, all_loss, smooth_loss, unpen_loss, grads = all_pen_loss(
         model, x, y)
-    updates = jtu.tree_map(lambda g: model.lasso_param * lr * g, grads)
+    updates = jtu.tree_map(lambda g: - model.lasso_param * lr * g, grads)
     # model = eqx.apply_updates(model, updates)
     # do proximal gradient step
     values, treedef = jtu.tree_flatten(updates)

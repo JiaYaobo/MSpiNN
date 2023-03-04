@@ -34,7 +34,7 @@ def TestLoss(models, x_test, y_test, group_test):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--layer_sizes', '--list',
-                    nargs='+',  type=int, default=[200])
+                    nargs='+',  type=int, default=[100])
 parser.add_argument('--data_classes', type=int, default=1)
 parser.add_argument('--layer_nums', type=int)
 parser.add_argument('--init_learn_rate', type=float, default=1e-4)
@@ -47,9 +47,9 @@ parser.add_argument('--lasso_param_ratio', type=float, default=0.1)
 parser.add_argument('--group_lasso_param', type=float, default=0.98)
 parser.add_argument('--decay', type=float, default=0.98)
 parser.add_argument('--batch_size', type=int, default=300)
-parser.add_argument('--n_epochs', type=int, default=400)
+parser.add_argument('--n_epochs', type=int, default=200)
 parser.add_argument('--seed', type=int, default=20010218)
-parser.add_argument('--num_p', type=int, default=200)
+parser.add_argument('--num_p', type=int, default=00)
 parser.add_argument('--num_groups', type=int, default=2) 
 parser.add_argument('--n_train_obs', type=int, default=300)
 parser.add_argument('--n_test_obs', type=int, default=100)
@@ -109,12 +109,12 @@ train_df = pd.read_csv(train_data_file)
 test_df = pd.read_csv(test_data_file)
 
 x_train = train_df.iloc[:,1:(args.num_p+1)].values
-y_train = train_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
-group_train = train_df.iloc[:,202].values.reshape(-1, 1)
+y_train = train_df.iloc[:,101].values.reshape(-1, 1)
+group_train = train_df.iloc[:,102].values.reshape(-1, 1)
 
 x_test= test_df.iloc[:,1:(args.num_p+1)].values
-y_test= test_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1)
-group_test= test_df.iloc[:,202].values.reshape(-1, 1)
+y_test= test_df.iloc[:,101].values.reshape(-1, 1)
+group_test= test_df.iloc[:,102].values.reshape(-1, 1)
 
 lr = args.init_learn_rate
 

@@ -1,15 +1,12 @@
 import numpy as np
 
+# sin(x1(x1 + x2)) cos(x3 + x4x5) sin(ex5 + ex6 − x2).
 
 def func1(xs):
-    return np.exp(2 * xs[:, 0] + xs[:, 2] + 0.5 * xs[:, 5]) *  \
-           np.sin(- xs[:, 8] + 1.5 * xs[:, 9] + 0.5 * xs[:, 10] ) - \
-           (xs[:, 12] + 2 * xs[:, 15] - xs[:, 19] + 0.5 * xs[:, 20] ) ** 2 / \
-           (xs[:, 24] + 0.5 * xs[:, 26] + 1.5 * xs[:, 28] + 0.5 * xs[:, 30] + xs[:, 32])
+    return np.sin(xs[:, 1]* (xs[:, 1])) * np.cos(xs[:, 3]+ xs[:, 4] * xs[:, 5]) * np.sin(np.exp(xs[:, 5])+np.exp(xs[:, 6])-xs[:, 2])
 
+
+# sin(x3(x1 + x2)) cos(x3 + x4x5) sin(ex5 + ex6 − x2).s
 
 def func2(xs):
-    return np.exp(-2 * xs[:, 1] + xs[:, 2] - 2 * xs[:, 4]) * \
-           np.cos( xs[:, 8] + 0.5 * xs[:, 9] + 1.5 * xs[:, 11] ) + \
-           (xs[:, 13] - xs[:, 16] - 0.5 * xs[:, 17] + 2 * xs[:, 18] ) ** 2 / \
-           (0.5 * xs[:, 21] + 1 * xs[:, 22] -2 * xs[:, 25]- 0.5 * xs[:, 30] - xs[:, 32])
+    return np.sin(xs[:, 2]* (xs[:, 3])) * np.cos(xs[:, 5]+ xs[:, 1] * xs[:, 4]) * np.sin(2 * np.exp(xs[:, 2]) - np.exp(xs[:, 1])-xs[:, 3])

@@ -5,6 +5,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import AdaBoostRegressor, GradientBoostingRegressor
 from sklearn.ensemble import BaggingRegressor, ExtraTreesRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.linear_model import LassoCV
 
 from metrics import RMSELoss
 
@@ -13,6 +15,8 @@ ar = AdaBoostRegressor()
 br = BaggingRegressor()
 gbr = GradientBoostingRegressor()
 etr = ExtraTreesRegressor()
+mlp = MLPRegressor()
+lasso = LassoCV()
 
 
 parser = argparse.ArgumentParser()
@@ -20,7 +24,7 @@ parser.add_argument('--decay', type=float, default=0.97)
 parser.add_argument('--batch_size', type=int, default=300)
 parser.add_argument('--n_epochs', type=int, default=400)
 parser.add_argument('--seed', type=int, default=20010218)
-parser.add_argument('--num_p', type=int, default=200)
+parser.add_argument('--num_p', type=int, default=100)
 parser.add_argument('--num_groups', type=int, default=2) 
 parser.add_argument('--n_train_obs', type=int, default=300)
 parser.add_argument('--n_test_obs', type=int, default=100)
@@ -52,12 +56,12 @@ test_df = pd.read_csv(test_data_file)
 
 
 x_train = train_df.iloc[:,1:(args.num_p+1)].values
-y_train = train_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1).ravel()
-group_train = train_df.iloc[:,202].values.reshape(-1, 1)
+y_train = train_df.iloc[:,101].values.reshape(-1, 1).ravel()
+group_train = train_df.iloc[:,102].values.reshape(-1, 1)
 
 x_test= test_df.iloc[:,1:(args.num_p+1)].values
-y_test= test_df.iloc[:,(args.num_p+1)].values.reshape(-1, 1).ravel()
-group_test= test_df.iloc[:,202].values.reshape(-1, 1)
+y_test= test_df.iloc[:,101].values.reshape(-1, 1).ravel()
+group_test= test_df.iloc[:,102].values.reshape(-1, 1)
 
 rf.fit(x_train, y_train)
 y_pred_rf = rf.predict(x_test)
@@ -71,11 +75,15 @@ y_pred_br = br.predict(x_test)
 etr.fit(x_train, y_train)
 y_pred_etr = etr.predict(x_test)
 
-
 gbr.fit(x_train, y_train)
 y_pred_gbr = gbr.predict(x_test)
 
+mlp.fit(x_train, y_train)
+y_pred_mlp = mlp.predict(x_test)
+
+lasso.fit(x_train, y_train)
+y_pred_lasso = lasso.predict(x_test)
 
 
-print(f"{RMSELoss(y_test, y_pred_rf)}, {RMSELoss(y_test, y_pred_ar)},  "
-             f"{RMSELoss(y_test, y_pred_br)}, {RMSELoss(y_test, y_pred_etr)}, {RMSELoss(y_test, y_pred_gbr)}")
+print(f"{RMSELoss(y_test, y_pred_rf)}, {RMSELoss(y_test, y_pred_ar)}, "
+             f"{RMSELoss(y_test, y_pred_br)}, {RMSELoss(y_test, y_pred_etr)}, {RMSELoss(y_test, y_pred_gbr)}, {RMSELoss(y_test, y_pred_mlp)}, {RMSELoss(y_test, y_pred_lasso)}")

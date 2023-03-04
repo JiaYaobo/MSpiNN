@@ -120,4 +120,4 @@ class FNN(eqx.Module):
     
     def support_loc(self, threshold=1e-6):
         norms = self.input_layer_norm()
-        return jnp.argwhere(norms > threshold)
+        return jnp.argwhere(norms > threshold).reshape(-1)
