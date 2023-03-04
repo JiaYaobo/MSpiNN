@@ -39,7 +39,7 @@ class DataGenerator:
         y = np.array(np.random.random_sample((true_ys.size, 1)) < true_ys, dtype=int)
         return Dataset(xs, y, true_ys, group=self.group)
 
-def get_dataset(num_p, num_groups, n_obs, err_dist, func_list):
+def make_dataset(num_p, num_groups, n_obs, err_dist, func_list):
     if isinstance(n_obs, int):
         n_obs = [n_obs] * num_groups
     x = np.array([]).reshape(0, num_p)

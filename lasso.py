@@ -102,11 +102,6 @@ for i in range(args.k):
     opt_states.append(opt_state)
     optims.append(optim)
 
-if args.linear:
-    from linear_func import func1, func2
-else:
-    from nonlinear_func import func1, func2
-
 train_data_file = './data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
 test_data_file = './data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
 

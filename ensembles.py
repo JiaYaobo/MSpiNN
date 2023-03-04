@@ -1,15 +1,18 @@
 import argparse
+
 import pandas as pd
 
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.ensemble import AdaBoostRegressor
-from sklearn.ensemble import BaggingRegressor
+from sklearn.ensemble import AdaBoostRegressor, GradientBoostingRegressor
+from sklearn.ensemble import BaggingRegressor, ExtraTreesRegressor
 
 from metrics import RMSELoss
 
 rf = RandomForestRegressor()
 ar = AdaBoostRegressor()
 br = BaggingRegressor()
+gbr = GradientBoostingRegressor()
+etr = ExtraTreesRegressor()
 
 
 parser = argparse.ArgumentParser()
@@ -26,8 +29,7 @@ parser.add_argument('--k', type=int, default=2)
 parser.add_argument('--err_dist', type=int, default=0)
 parser.add_argument('--round', type=int, default=1)
 parser.add_argument('--linear', action='store_true')
-parser.add_argument('--project', type=str)
-
+parser.add_argument('--project', type=str, default='ensemble.csv')
 
 args = parser.parse_args()
 
@@ -60,13 +62,20 @@ group_test= test_df.iloc[:,202].values.reshape(-1, 1)
 rf.fit(x_train, y_train)
 y_pred_rf = rf.predict(x_test)
 
-br.fit(x_train, y_train)
-y_pred_br = br.predict(x_test)
-
-
 ar.fit(x_train, y_train)
 y_pred_ar = ar.predict(x_test)
 
-print(f"Random Forest RMSE: {RMSELoss(y_test, y_pred_rf)}")
-print(f"AdaBoost RMSE: {RMSELoss(y_test, y_pred_ar)}")
-print(f"Bagging RMSE {RMSELoss(y_test, y_pred_br)}")
+br.fit(x_train, y_train)
+y_pred_br = br.predict(x_test)
+
+etr.fit(x_train, y_train)
+y_pred_etr = etr.predict(x_test)
+
+
+gbr.fit(x_train, y_train)
+y_pred_gbr = gbr.predict(x_test)
+
+
+
+print(f"{RMSELoss(y_test, y_pred_rf)}, {RMSELoss(y_test, y_pred_ar)},  "
+             f"{RMSELoss(y_test, y_pred_br)}, {RMSELoss(y_test, y_pred_etr)}, {RMSELoss(y_test, y_pred_gbr)}")

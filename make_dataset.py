@@ -3,11 +3,9 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from data_generator import get_dataset
-
+from data_generator import make_dataset
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--seed', type=int, default=20010218)
 parser.add_argument('--num_p', type=int, default=200)
 parser.add_argument('--num_groups', type=int, default=2) 
 parser.add_argument('--n_train_obs', type=int, default=300)
@@ -55,7 +53,7 @@ if args.linear:
 else:
     data_file = './data/nonlinear/'+is_linear+'_'+is_train+'_'+is_balance+'_'+str(n)+'_err'+str(args.err_dist)+'.csv'
 
-x_train, y_train, group_train = get_dataset(args.num_p, args.num_groups, 
+x_train, y_train, group_train = make_dataset(args.num_p, args.num_groups, 
                     [int(args.n_train_obs*args.balance), int(args.n_train_obs * (1 - args.balance))], args.err_dist, func_list=[func1, func2])
 
 
