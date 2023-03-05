@@ -13,16 +13,16 @@ from jax import vmap
 from model import FNN
 from train_step import make_step_adam_prox, make_step, make_step_prox
 from data_generator import dataloader
-from altermin_schedular import allocate_model, collect_data_groups
-from metrics import RMSELoss, BIC
+from altermin_schedular import allocate_model, collect_data_groups, batch_warmup
+from metrics import RMSELoss, BIC, AIC
 
 
-def TestLoss(models, x_test, y_test, group_test):
+def TestLoss(models, x_test, y_test):
     z = allocate_model(models, x_test, y_test)
     ytest_pred = np.array([]).reshape(0, 1)
     ytest_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
-        xi_, yi_, _ = collect_data_groups(i, x_test, y_test, group_test, z)
+        xi_, yi_ = collect_data_groups(i, x_test, y_test, z)
         yi_pred = vmap(models[i], in_axes=(0))(xi_)
 
         ytest_pred = jnp.concatenate([ytest_pred, yi_pred])
@@ -111,26 +111,30 @@ test_df = pd.read_csv(test_data_file)
 
 x_train = train_df.iloc[:,1:(args.num_p+1)].values
 y_train = train_df.iloc[:,101].values.reshape(-1, 1)
-group_train = train_df.iloc[:,102].values.reshape(-1, 1)
+
+# x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.1, random_state=42)
 
 x_test= test_df.iloc[:,1:(args.num_p+1)].values
 y_test= test_df.iloc[:,101].values.reshape(-1, 1)
-group_test= test_df.iloc[:,102].values.reshape(-1, 1)
+# group_test= test_df.iloc[:,102].values.reshape(-1, 1)
 
 lr = args.adam_learn_rate
-
-print(f"{is_linear} {is_balance} simulation")
+batch_size = x_train.shape[0]
 
 start = time.time()
 
-for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
-            [x_train, y_train, group_train], args.n_train_obs, key=loader_key)
+for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
+            [x_train, y_train], batch_size, key=loader_key)
     ):
-    z = allocate_model(models, xi, yi)
+
+    if step == 0:
+        z = batch_warmup(args.k, xi, yi)
+    else:
+        z = allocate_model(models, xi, yi)
     y_pred = np.array([]).reshape(0, 1)
     y_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
-        xi_, yi_, groupi_ = collect_data_groups(i, xi, yi, groupi, z)
+        xi_, yi_= collect_data_groups(i, xi, yi, z)
         yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
                 models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
         y_pred = jnp.concatenate([y_pred, yi_pred])
@@ -138,7 +142,7 @@ for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
 
     train_loss = RMSELoss(y_pred, y_true)
 
-    test_loss = TestLoss(models, x_test, y_test, group_test)
+    test_loss = TestLoss(models, x_test, y_test)
 
     if (step + 1) % 50 == 0 or (step + 1) == args.n_epochs:
         end = time.time()
@@ -146,5 +150,5 @@ for step, (xi, yi, groupi) in zip(range(args.n_epochs), dataloader(
         for g in range(args.k):
             support = models[g].support()
             supports += support
-            print(f"model{g} support: {support}")
-        print(f"{args.k}, {train_loss}, {test_loss}, {BIC(test_loss, args.num_p, args.k, args.n_train_obs, supports, args.layer_sizes[1])}, {args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end-start}")
+            # print(f"model{g} support: {support}")
+        print(f"{args.k}, {train_loss}, {test_loss}, {AIC(train_loss, args.n_train_obs, supports, args.layer_sizes[1])},{args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end-start}")

@@ -1,4 +1,5 @@
 ###### 
+
 for i in {1..10}; do
     python -u linear_model.py --linear --balance 0.5 --err_dist 0 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_balance_300_linear_model_err_0.csv
     wait
@@ -30,32 +31,32 @@ for i in {1..10}; do
     wait
 done
 
-for i in {1..10}; do
-    python -u linear_model.py --linear --balance 0.7 --err_dist 0 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_imbalance_300_ensembles_err_0.csv
-    wait
-done
+# for i in {1..10}; do
+#     python -u linear_model.py --linear --balance 0.7 --err_dist 0 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_imbalance_300_ensembles_err_0.csv
+#     wait
+# done
 
-for i in {1..10}; do
-    python -u linear_model.py --linear --balance 0.7 --err_dist 1 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_imbalance_300_linear_model_err_1.csv
-    wait
-done
+# for i in {1..10}; do
+#     python -u linear_model.py --linear --balance 0.7 --err_dist 1 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_imbalance_300_linear_model_err_1.csv
+#     wait
+# done
 
-for i in {1..10}; do
-    python -u linear_model.py --linear --balance 0.7 --err_dist 2 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_imbalance_300_linear_model_err_2.csv
-    wait
-done
+# for i in {1..10}; do
+#     python -u linear_model.py --linear --balance 0.7 --err_dist 2 --n_train_obs 300 --seed "$i" >> logs/linear_model/linear_imbalance_300_linear_model_err_2.csv
+#     wait
+# done
 
-for i in {1..10}; do
-    python -u linear_model.py --linear --balance 0.7 --err_dist 0 --n_train_obs 500 --seed "$i" >> logs/linear_model/linear_imbalance_500_linear_model_err_0.csv
-    wait
-done
+# for i in {1..10}; do
+#     python -u linear_model.py --linear --balance 0.7 --err_dist 0 --n_train_obs 500 --seed "$i" >> logs/linear_model/linear_imbalance_500_linear_model_err_0.csv
+#     wait
+# done
 
-for i in {1..10}; do
-    python -u linear_model.py --linear --balance 0.7 --err_dist 1 --n_train_obs 500 --seed "$i" >> logs/linear_model/linear_imbalance_500_linear_model_err_1.csv
-    wait
-done
+# for i in {1..10}; do
+#     python -u linear_model.py --linear --balance 0.7 --err_dist 1 --n_train_obs 500 --seed "$i" >> logs/linear_model/linear_imbalance_500_linear_model_err_1.csv
+#     wait
+# done
 
-for i in {1..10}; do
-    python -u linear_model.py --linear --balance 0.7 --err_dist 2 --n_train_obs 500 --seed "$i" >> logs/linear_model/linear_imbalance_500_mlp_err_2.csv
-    wait
-done
+# for i in {1..10}; do
+#     python -u linear_model.py --linear --balance 0.7 --err_dist 2 --n_train_obs 500 --seed "$i" >> logs/linear_model/linear_imbalance_500_mlp_err_2.csv
+#     wait
+# done

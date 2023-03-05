@@ -1,8 +1,8 @@
 ```{r}
 library(tidyverse)
 setwd('/Users/jiayaobo/MSpINN')
-train_dt <- read.csv('./data/linear/linear_train_balance_500_err0.csv')
-test_dt <- read.csv('./data/linear/linear_test_balance_100_err0.csv')
+train_dt <- read.csv('./data/linear/linear_train_balance_300_err1.csv')
+test_dt <- read.csv('./data/linear/linear_test_balance_100_err1.csv')
 ```
 
 ```{r}
@@ -14,9 +14,9 @@ train_dt[,201]
 ```
 
 ```{r}
-X <- train_dt[,2:201]
-y <- train_dt[,202]
-groups <- train_dt[,203] + 1
+X <- train_dt[,2:101]
+y <- train_dt[,102]
+groups <- train_dt[,103] + 1
 
 dim(X)
 dim(train_dt)
@@ -32,7 +32,7 @@ groups
 
 ```{r}
 library("flexmix")
-fit <- flexmix(X200~.-X-X201, data=train_dt, k=2, cluster = groups, model=FLXMRglmnet())
+fit <- flexmix(X100~.-X-X101, data=train_dt, k=2, cluster = groups, model=FLXMRglmnet())
 ```
 
 ```{r}
@@ -40,9 +40,9 @@ parameters(fit)
 ```
 
 ```{r}
-X.test <- test_dt[,2:201]
-y.test <- test_dt[,202]
-groups.test <- test_dt[,203]
+X.test <- test_dt[,2:101]
+y.test <- test_dt[,102]
+groups.test <- test_dt[,103]
 ```
 
 

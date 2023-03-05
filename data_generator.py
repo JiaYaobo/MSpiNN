@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import jax.numpy as jnp
 import jax.random as jrand
 
@@ -81,3 +82,20 @@ def dataloader(arrays, batch_size, *, key):
             yield tuple(array[batch_perm] for array in arrays)
             start = end
             end = start + batch_size
+
+
+
+fn_x = '../data/CCLE/expression.csv'
+fn_y = '../data/CCLE/drug.csv'
+fn_grp = '../data/CCLE/subtypes.csv'
+
+def load_ccle_data():
+    df_x = pd.read_csv(fn_x)
+    df_y = pd.read_csv(fn_y)
+    df_grp = pd.read_csv(fn_grp)
+    x = df_x.values
+    y = df_y['Paclitaxel_ActArea'].values
+    group = np.where(pd.factorize(df_grp['subtype'])[0] == 1 ,0)
+    y = np.expand_dims(y, axis=1)
+    group = np.expand_dims(group, axis=1)
+    return x, y, group  

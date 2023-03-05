@@ -1,5 +1,7 @@
 from typing import Sequence
 
+import numpy as np
+from sklearn.cluster import KMeans
 import jax.numpy as jnp
 from jax import vmap, jit
 
@@ -16,6 +18,13 @@ def HuberLoss(y_pred, y_true):
     return loss
 
 
+def batch_warmup(n_groups, x, y):
+    kms = KMeans(n_clusters=n_groups)
+    data = np.hstack([x, y])
+    kms.fit(data)
+    return jnp.array(kms.labels_)
+
+
 def allocate_model(models: Sequence[FNN], x, y):
     loss = []
     for i in range(len(models)):
@@ -29,5 +38,5 @@ def allocate_model(models: Sequence[FNN], x, y):
     return index
 
 
-def collect_data_groups(which_group, x, y, group, z):
-    return x[z == which_group, ], y[z == which_group, ], group[z == which_group, ]
+def collect_data_groups(which_group, x, y, z):
+    return x[z == which_group, ], y[z == which_group, ]
