@@ -1,25 +1,50 @@
-# ks=(1 2 3 4)
-# ns=(500 300)
-# errs=(0 1 2)
+ks=(2 3)
+ns=(500 300)
+errs=(0 1 2)
 
 # for n in "${ns[@]}"; do
 #     for e in "${errs[@]}"; do
-#         for i in {1..10}; do
-#             for k in {1..4}; do
-#                 python -u train.py --k "$k" --layer_sizes 100 50 --adam_learn_rate 1e-3\
-#                                 --n_train_obs "$n" --n_epochs 100 --num_p 100\
-#                                 --err_dist "$e" --seed "$i" --round "$i"\
-#                                 --lasso_param_ratio 0.1 --group_lasso_param 0.1 --ridge_param 0.01 >> logs/MSpINN/train_nonlinear_balance.log
-#                 wait
+#         for i in {1..50}; do
+#             for k in {2..3}; do
+#                 if [[ $k -eq 3 ]]
+#                 then
+#                     python -u train.py --k "$k" --layer_sizes 100 50 --adam_learn_rate 1e-3\
+#                                     --n_train_obs "$n" --n_epochs 100 --num_p 100\
+#                                     --err_dist "$e" --seed "$i" --round "$i"\
+#                                     --lasso_param_ratio 0.1 --group_lasso_param 0.27 --ridge_param 0.01 >> logs/MSpINN/train_nonlinear_balance2.log
+#                     wait
+#                 else
+#                     python -u train.py --k "$k" --layer_sizes 100 50 --adam_learn_rate 1e-3\
+#                                     --n_train_obs "$n" --n_epochs 100 --num_p 100\
+#                                     --err_dist "$e" --seed "$i" --round "$i"\
+#                                     --lasso_param_ratio 0.1 --group_lasso_param 0.2 --ridge_param 0.01 >> logs/MSpINN/train_nonlinear_balance2.log
+#                     wait
+#                 fi
 #             done
 #         done
 #     done
 # done
 
-for i in {1..10}; do
-python -u train.py --k 2 --layer_sizes 100 50 --adam_learn_rate 1e-3\
-                --n_train_obs 300 --n_epochs 100 --num_p 100\
-                --err_dist 1 --seed "$i" --round "$i"\
-                --lasso_param_ratio 0.1 --group_lasso_param 0.1 --ridge_param 0.01 >> logs/MSpINN/train_nonlinear_balance_err1.csv
-wait
+
+for n in "${ns[@]}"; do
+    for e in "${errs[@]}"; do
+        for i in {1..50}; do
+            for k in {2..3}; do
+                if [[ $k -eq 3 ]]
+                then
+                    python -u train.py --k "$k" --layer_sizes 100 50 --adam_learn_rate 1e-3\
+                                    --n_train_obs "$n" --n_epochs 100 --num_p 100 --balance 0.7\
+                                    --err_dist "$e" --seed "$i" --round "$i"\
+                                    --lasso_param_ratio 0.1 --group_lasso_param 0.27 --ridge_param 0.01 >> logs/MSpINN/train_nonlinear_imbalance2.log
+                    wait
+                else
+                    python -u train.py --k "$k" --layer_sizes 100 50 --adam_learn_rate 1e-3\
+                                    --n_train_obs "$n" --n_epochs 100 --num_p 100 --balance 0.7\
+                                    --err_dist "$e" --seed "$i" --round "$i"\
+                                    --lasso_param_ratio 0.1 --group_lasso_param 0.2 --ridge_param 0.01 >> logs/MSpINN/train_nonlinear_imbalance2.log
+                    wait
+                fi
+            done
+        done
+    done
 done

@@ -144,7 +144,7 @@ for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
 
     test_loss = TestLoss(models, x_test, y_test)
 
-    if (step + 1) % 50 == 0 or (step + 1) == args.n_epochs:
+    if (step + 1) % 25 == 0 or (step + 1) == args.n_epochs:
         end = time.time()
         supports = 0
         for g in range(args.k):
