@@ -62,8 +62,8 @@ def make_dataset(num_p, num_groups, n_obs, err_dist, func_list):
         group_ = np.ones((dt.x.shape[0], 1)) * i
         group = np.vstack([group, group_])
 
-    x = (x - x.mean()) / x.std()
-    y = (y - y.mean()) / y.std()
+    x = (x - x.mean(axis=0)) / x.std(axis=0)
+    y = (y - y.mean(axis=0)) / y.std(axis=0)
 
     return x, y, group
 
@@ -87,15 +87,11 @@ def dataloader(arrays, batch_size, *, key):
 
 fn_x = '../data/CCLE/expression.csv'
 fn_y = '../data/CCLE/drug.csv'
-fn_grp = '../data/CCLE/subtypes.csv'
 
 def load_ccle_data():
     df_x = pd.read_csv(fn_x)
     df_y = pd.read_csv(fn_y)
-    df_grp = pd.read_csv(fn_grp)
     x = df_x.values
     y = df_y['Paclitaxel_ActArea'].values
-    group = np.where(pd.factorize(df_grp['subtype'])[0] == 1 ,0)
     y = np.expand_dims(y, axis=1)
-    group = np.expand_dims(group, axis=1)
-    return x, y, group  
+    return x, y
