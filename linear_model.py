@@ -12,7 +12,7 @@ import optax
 from jax import vmap
 
 from model import FNN
-from train_step import make_step_adam_prox, make_step, make_step_prox
+from train_step import make_step
 from data_generator import dataloader
 from altermin_schedular import allocate_model, collect_data_groups
 from metrics import RMSELoss, BIC

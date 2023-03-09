@@ -12,10 +12,10 @@ import optax
 from jax import vmap
 
 from model import FNN
-from train_step import make_step_adam_prox
+from train_step import make_step
 from data_generator import dataloader
-from altermin_schedular import allocate_model, collect_data_groups, batch_warmup
-from metrics import RMSELoss,  AIC
+from altermin_schedular import allocate_model, collect_data_groups
+from metrics import RMSELoss, BIC
 
 
 def TestLoss(models, x_test, y_test):
@@ -36,7 +36,7 @@ def TestLoss(models, x_test, y_test):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--layer_sizes', '--list',
-                    nargs='+',  type=int, default=[200, 30])
+                    nargs='+',  type=int, default=[100])
 parser.add_argument('--data_classes', type=int, default=1)
 parser.add_argument('--layer_nums', type=int)
 parser.add_argument('--init_learn_rate', type=float, default=3e-4)
@@ -49,9 +49,9 @@ parser.add_argument('--lasso_param_ratio', type=float, default=0.1)
 parser.add_argument('--group_lasso_param', type=float, default=0.1)
 parser.add_argument('--decay', type=float, default=0.97)
 parser.add_argument('--batch_size', type=int, default=300)
-parser.add_argument('--n_epochs', type=int, default=300)
+parser.add_argument('--n_epochs', type=int, default=100)
 parser.add_argument('--seed', type=int, default=20010218)
-parser.add_argument('--num_p', type=int, default=200)
+parser.add_argument('--num_p', type=int, default=100)
 parser.add_argument('--num_groups', type=int, default=2) 
 parser.add_argument('--n_train_obs', type=int, default=300)
 parser.add_argument('--n_test_obs', type=int, default=100)
@@ -89,7 +89,7 @@ for i in range(args.k):
         data_classes=args.data_classes,
         is_relu=args.is_relu,
         layer_nums=args.layer_nums,
-        use_bias=False,
+        use_bias=True,
         lasso_param_ratio=args.lasso_param_ratio,
         group_lasso_param=args.group_lasso_param,
         ridge_param=args.ridge_param,
@@ -103,21 +103,6 @@ for i in range(args.k):
     models.append(model)
     opt_states.append(opt_state)
     optims.append(optim)
-
-# train_data_file = './data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
-# test_data_file = './data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
-
-# train_df = pd.read_csv(train_data_file)
-# test_df = pd.read_csv(test_data_file)
-
-# x_train = train_df.iloc[:,1:(args.num_p+1)].values
-# y_train = train_df.iloc[:,101].values.reshape(-1, 1)
-
-# # x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.1, random_state=42)
-
-# x_test= test_df.iloc[:,1:(args.num_p+1)].values
-# y_test= test_df.iloc[:,101].values.reshape(-1, 1)
-# # group_test= test_df.iloc[:,102].values.reshape(-1, 1)
 
 fn_x = './data/CCLE/expression.csv'
 fn_y = './data/CCLE/drug.csv'
@@ -133,31 +118,30 @@ def load_ccle_data():
 
 df = load_ccle_data().dropna(axis=0)
 
-X = jnp.asarray(df.values[:,0:100], dtype=jnp.float32)
-y = jnp.asarray(df.values[:,100].reshape(-1, 1), dtype=jnp.float32)
+# X = jnp.asarray(df.values[:,0:100], dtype=jnp.float32)
+# y = jnp.asarray(df.values[:,100].reshape(-1, 1), dtype=jnp.float32)
+
+X = df.values[:,0:100]
+y = df.values[:, 100].reshape(-1, 1)
+
+print(X.dtype)
 
 x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 lr = args.adam_learn_rate
 batch_size = x_train.shape[0]
 
-layer1_size = args.layer_sizes[1] if len(args.layer_sizes) >= 2 else 0
-
 start = time.time()
 
 for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
             [x_train, y_train], batch_size, key=loader_key)
     ):
-
-    # if step == 0:
-    #     z = batch_warmup(args.k, xi, yi)
-    # else:
     z = allocate_model(models, xi, yi)
     y_pred = np.array([]).reshape(0, 1)
     y_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
         xi_, yi_= collect_data_groups(i, xi, yi, z)
-        yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step_adam_prox(
+        yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step(
                 models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
         y_pred = jnp.concatenate([y_pred, yi_pred])
         y_true = jnp.concatenate([y_true, yi_])
@@ -168,10 +152,4 @@ for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
 
     if  (step + 1) == args.n_epochs:
         end = time.time()
-        supports = 0
-        for g in range(args.k):
-            support = models[g].support()
-            supports += support
-            # print(f"model{g} support: {support}")
-        
-        print(f"{args.k}, {train_loss}, {test_loss}, {AIC(train_loss, x_train.shape[0], supports, layer1_size)},{args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end-start}")
+        print(f"{args.k}, {train_loss}, {test_loss},{args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end-start}")
