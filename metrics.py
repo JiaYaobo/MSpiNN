@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from jax  import jit
+from jax import jit
 
 @jit
 def MSELoss(y_pred, y_true):

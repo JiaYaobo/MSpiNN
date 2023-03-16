@@ -2,9 +2,8 @@ import jax.numpy as jnp
 import jax.tree_util as jtu
 import equinox as eqx
 
-from model import FNN
+from model import FFN
 from loss import all_pen_loss, mse_loss
-
 
 
 @eqx.filter_jit
@@ -24,8 +23,8 @@ def clip_gradient(grads):
 
 
 @eqx.filter_jit
-def make_step(model: FNN, optim, opt_state, x, y, lr=None, decay=None):
-    pred, _,  __, ___, grads = mse_loss(
+def make_step(model: FFN, optim, opt_state, x, y, lr=None, decay=None):
+    pred, _, __, ___, grads = mse_loss(
         model, x, y)
     updates, opt_state = optim.update(grads, opt_state)
     model = eqx.apply_updates(model, updates)
@@ -33,19 +32,19 @@ def make_step(model: FNN, optim, opt_state, x, y, lr=None, decay=None):
 
 
 @eqx.filter_jit
-def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.001, decay=0.98):
+def make_step_adam_prox(model: FFN, optim, opt_state, x, y, lr=0.001, decay=0.98):
     pred, all_loss, smooth_loss, unpen_loss, grads = all_pen_loss(
         model, x, y)
     updates, opt_state = optim.update(grads, opt_state)
-   # Do proximal gradient step
+    # Do proximal gradient step
     values, treedef = jtu.tree_flatten(updates)
     # adam_weights = jnp.abs(values[0])
     sz = lr * jnp.sqrt(1 - 0.999) / (1 - 0.9)
     adam_weights = jtu.tree_flatten(opt_state[0].adam_weights)[0][0] * sz
     # Do proximal gradient for lasso: soft threshold
-    weights = model.layers[0].weight 
+    weights = model.layers[0].weight
     weights_updated = jnp.multiply(jnp.sign(weights), jnp.maximum(
-        jnp.abs(weights) - model.lasso_param  * adam_weights, 0))
+        jnp.abs(weights) - model.lasso_param * adam_weights, 0))
 
     # Do proximal gradient step for group lasso
     group_norms = 1e-10 + jnp.linalg.norm(weights, axis=1).reshape(-1, 1)
@@ -63,7 +62,7 @@ def make_step_adam_prox(model: FNN, optim, opt_state, x, y, lr=0.001, decay=0.98
 
 
 @eqx.filter_jit
-def make_step_prox(model: FNN, optim, opt_state, x, y, lr=None, decay=0.98):
+def make_step_prox(model: FFN, optim, opt_state, x, y, lr=None, decay=0.98):
     pred, all_loss, smooth_loss, unpen_loss, grads = all_pen_loss(
         model, x, y)
     updates = jtu.tree_map(lambda g: - model.lasso_param * lr * g, grads)
@@ -90,5 +89,3 @@ def make_step_prox(model: FNN, optim, opt_state, x, y, lr=None, decay=0.98):
     lr = lr * decay
 
     return pred, all_loss, smooth_loss, unpen_loss, model, opt_state, lr
-
-

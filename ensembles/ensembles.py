@@ -18,14 +18,13 @@ etr = ExtraTreesRegressor()
 mlp = MLPRegressor()
 lasso = LassoCV()
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--decay', type=float, default=0.97)
 parser.add_argument('--batch_size', type=int, default=300)
 parser.add_argument('--n_epochs', type=int, default=400)
 parser.add_argument('--seed', type=int, default=20010218)
 parser.add_argument('--num_p', type=int, default=100)
-parser.add_argument('--num_groups', type=int, default=2) 
+parser.add_argument('--num_groups', type=int, default=2)
 parser.add_argument('--n_train_obs', type=int, default=300)
 parser.add_argument('--n_test_obs', type=int, default=100)
 parser.add_argument('--balance', type=float, default=0.5)
@@ -47,21 +46,21 @@ if args.balance == 0.5:
 else:
     is_balance = 'imbalance'
 
-train_data_file = './data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
-test_data_file = './data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
-
+train_data_file = '../data/' + is_linear + '/' + is_linear + '_train_' + is_balance + '_' + str(
+    args.n_train_obs) + '_err' + str(args.err_dist) + '.csv'
+test_data_file = '../data/' + is_linear + '/' + is_linear + '_test_' + is_balance + '_' + str(
+    args.n_test_obs) + '_err' + str(args.err_dist) + '.csv'
 
 train_df = pd.read_csv(train_data_file)
 test_df = pd.read_csv(test_data_file)
 
+x_train = train_df.iloc[:, 1:(args.num_p + 1)].values
+y_train = train_df.iloc[:, 101].values.reshape(-1, 1).ravel()
+group_train = train_df.iloc[:, 102].values.reshape(-1, 1)
 
-x_train = train_df.iloc[:,1:(args.num_p+1)].values
-y_train = train_df.iloc[:,101].values.reshape(-1, 1).ravel()
-group_train = train_df.iloc[:,102].values.reshape(-1, 1)
-
-x_test= test_df.iloc[:,1:(args.num_p+1)].values
-y_test= test_df.iloc[:,101].values.reshape(-1, 1).ravel()
-group_test= test_df.iloc[:,102].values.reshape(-1, 1)
+x_test = test_df.iloc[:, 1:(args.num_p + 1)].values
+y_test = test_df.iloc[:, 101].values.reshape(-1, 1).ravel()
+group_test = test_df.iloc[:, 102].values.reshape(-1, 1)
 
 rf.fit(x_train, y_train)
 y_pred_rf = rf.predict(x_test)
@@ -78,12 +77,5 @@ y_pred_etr = etr.predict(x_test)
 gbr.fit(x_train, y_train)
 y_pred_gbr = gbr.predict(x_test)
 
-mlp.fit(x_train, y_train)
-y_pred_mlp = mlp.predict(x_test)
-
-lasso.fit(x_train, y_train)
-y_pred_lasso = lasso.predict(x_test)
-
-
 print(f"{RMSELoss(y_test, y_pred_rf)}, {RMSELoss(y_test, y_pred_ar)}, "
-             f"{RMSELoss(y_test, y_pred_br)}, {RMSELoss(y_test, y_pred_etr)}, {RMSELoss(y_test, y_pred_gbr)}, {RMSELoss(y_test, y_pred_mlp)}, {RMSELoss(y_test, y_pred_lasso)}")
+      f"{RMSELoss(y_test, y_pred_br)}, {RMSELoss(y_test, y_pred_etr)}, {RMSELoss(y_test, y_pred_gbr)}, ")

@@ -1,5 +1,5 @@
 import argparse
-from typing import Sequence
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ import equinox as eqx
 import optax
 from jax import vmap
 
-from model import FNN
+from model import FFN
 from train_step import make_step
 from data_generator import dataloader
 from altermin_schedular import allocate_model, collect_data_groups
@@ -78,11 +78,11 @@ key = jrand.PRNGKey(args.seed)
 loader_key, *model_keys = jrand.split(key, args.k + 1)
 
 
-models: Sequence[FNN] = []
+models: List[FFN] = []
 opt_states = []
 optims = []
 for i in range(args.k):
-    model = FNN(
+    model = FFN(
         layer_sizes=args.layer_sizes,
         data_classes=args.data_classes,
         is_relu=args.is_relu,
@@ -116,9 +116,9 @@ x_train = train_df.iloc[:,1:(args.num_p+1)].values
 y_train = train_df.iloc[:,101].values.reshape(-1, 1)
 group_train = train_df.iloc[:,102].values.reshape(-1, 1)
 
-x_test= test_df.iloc[:,1:(args.num_p+1)].values
-y_test= test_df.iloc[:,101].values.reshape(-1, 1)
-group_test= test_df.iloc[:,102].values.reshape(-1, 1)
+x_test = test_df.iloc[:, 1:(args.num_p+1)].values
+y_test = test_df.iloc[:, 101].values.reshape(-1, 1)
+group_test = test_df.iloc[:, 102].values.reshape(-1, 1)
 
 lr = args.init_learn_rate
 

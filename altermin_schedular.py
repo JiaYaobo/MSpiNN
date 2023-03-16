@@ -5,7 +5,7 @@ from sklearn.cluster import KMeans
 import jax.numpy as jnp
 from jax import vmap, jit
 
-from model import FNN
+from model import FFN
 
 
 @jit
@@ -25,7 +25,7 @@ def batch_warmup(n_groups, x, y):
     return jnp.array(kms.labels_)
 
 
-def allocate_model(models: Sequence[FNN], x, y):
+def allocate_model(models: Sequence[FFN], x, y):
     loss = []
     for i in range(len(models)):
         y_pred = vmap(models[i], in_axes=(0))(x)

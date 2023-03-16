@@ -11,7 +11,7 @@ import equinox as eqx
 import optax
 from jax import vmap
 
-from model import FNN
+from model import FFN
 from train_step import make_step_adam_prox, make_step, make_step_prox
 from data_generator import dataloader
 from altermin_schedular import allocate_model, collect_data_groups
@@ -80,11 +80,11 @@ key = jrand.PRNGKey(args.seed)
 loader_key, *model_keys = jrand.split(key, args.k + 1)
 
 
-models: Sequence[FNN] = []
+models: Sequence[FFN] = []
 opt_states = []
 optims = []
 for i in range(args.k):
-    model = FNN(
+    model = FFN(
         layer_sizes=args.layer_sizes,
         data_classes=args.data_classes,
         is_relu=args.is_relu,
@@ -104,24 +104,20 @@ for i in range(args.k):
     opt_states.append(opt_state)
     optims.append(optim)
 
-fn_x = './data/CCLE/expression.csv'
-fn_y = './data/CCLE/drug.csv'
+train_data_file = '../data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
+test_data_file = '../data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
 
-def load_ccle_data():
-    df_x = pd.read_csv(fn_x)
-    df_y = pd.read_csv(fn_y)
-    x = df_x.values[:,1:101]
-    y = np.expand_dims(df_y['Paclitaxel_ActArea'].values, axis=1)
-    data = np.hstack([x, y])
-    df = pd.DataFrame(data)
-    return df
+train_df = pd.read_csv(train_data_file)
+test_df = pd.read_csv(test_data_file)
 
-df = load_ccle_data().dropna(axis=0)
+x_train = train_df.iloc[:,1:(args.num_p+1)].values
+y_train = train_df.iloc[:,101].values.reshape(-1, 1)
 
-X = jnp.asarray(df.values[:,0:100], dtype=jnp.float32)
-y = jnp.asarray(df.values[:,100].reshape(-1, 1), dtype=jnp.float32)
+# x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.1, random_state=42)
 
-x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+x_test= test_df.iloc[:,1:(args.num_p+1)].values
+y_test= test_df.iloc[:,101].values.reshape(-1, 1)
+# group_test= test_df.iloc[:,102].values.reshape(-1, 1)
 
 lr = args.adam_learn_rate
 batch_size = x_train.shape[0]
@@ -145,6 +141,6 @@ for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
 
     test_loss = TestLoss(models, x_test, y_test)
 
-    if (step + 1) == args.n_epochs:
+    if (step + 1) % 50 == 0 or (step + 1) == args.n_epochs:
         end = time.time()
         print(f"{args.k}, {train_loss}, {test_loss}, {args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end-start}")

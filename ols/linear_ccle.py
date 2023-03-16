@@ -11,11 +11,11 @@ import equinox as eqx
 import optax
 from jax import vmap
 
-from model import FNN
+from model import FFN
 from train_step import make_step
 from data_generator import dataloader
 from altermin_schedular import allocate_model, collect_data_groups
-from metrics import RMSELoss, BIC
+from metrics import RMSELoss
 
 
 def TestLoss(models, x_test, y_test):
@@ -36,7 +36,7 @@ def TestLoss(models, x_test, y_test):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--layer_sizes', '--list',
-                    nargs='+',  type=int, default=[100])
+                    nargs='+', type=int, default=[100])
 parser.add_argument('--data_classes', type=int, default=1)
 parser.add_argument('--layer_nums', type=int)
 parser.add_argument('--init_learn_rate', type=float, default=3e-4)
@@ -52,7 +52,7 @@ parser.add_argument('--batch_size', type=int, default=300)
 parser.add_argument('--n_epochs', type=int, default=100)
 parser.add_argument('--seed', type=int, default=20010218)
 parser.add_argument('--num_p', type=int, default=100)
-parser.add_argument('--num_groups', type=int, default=2) 
+parser.add_argument('--num_groups', type=int, default=2)
 parser.add_argument('--n_train_obs', type=int, default=300)
 parser.add_argument('--n_test_obs', type=int, default=100)
 parser.add_argument('--balance', type=float, default=0.5)
@@ -61,7 +61,6 @@ parser.add_argument('--err_dist', type=int, default=0)
 parser.add_argument('--round', type=int, default=1)
 parser.add_argument('--linear', action='store_true')
 parser.add_argument('--project', type=str)
-
 
 args = parser.parse_args()
 
@@ -75,16 +74,14 @@ if args.balance == 0.5:
 else:
     is_balance = 'imbalance'
 
-
 key = jrand.PRNGKey(args.seed)
 loader_key, *model_keys = jrand.split(key, args.k + 1)
 
-
-models: Sequence[FNN] = []
+models: Sequence[FFN] = []
 opt_states = []
 optims = []
 for i in range(args.k):
-    model = FNN(
+    model = FFN(
         layer_sizes=args.layer_sizes,
         data_classes=args.data_classes,
         is_relu=args.is_relu,
@@ -104,20 +101,28 @@ for i in range(args.k):
     opt_states.append(opt_state)
     optims.append(optim)
 
-train_data_file = './data/'+is_linear+'/'+is_linear+'_train_'+is_balance+'_'+str(args.n_train_obs)+'_err'+str(args.err_dist)+'.csv'
-test_data_file = './data/'+is_linear+'/'+is_linear+'_test_'+is_balance+'_'+str(args.n_test_obs)+'_err'+str(args.err_dist)+'.csv'
+fn_x = '../data/CCLE/expression.csv'
+fn_y = '../data/CCLE/drug.csv'
 
-train_df = pd.read_csv(train_data_file)
-test_df = pd.read_csv(test_data_file)
 
-x_train = train_df.iloc[:,1:(args.num_p+1)].values
-y_train = train_df.iloc[:,101].values.reshape(-1, 1)
+def load_ccle_data():
+    df_x = pd.read_csv(fn_x)
+    df_y = pd.read_csv(fn_y)
+    x = df_x.values[:, 1:101]
+    y = np.expand_dims(df_y['Paclitaxel_ActArea'].values, axis=1)
+    data = np.hstack([x, y])
+    df = pd.DataFrame(data)
+    return df
 
-# x_train, x_test, y_train, y_test = train_test_split(x_train, y_train, test_size=0.1, random_state=42)
 
-x_test= test_df.iloc[:,1:(args.num_p+1)].values
-y_test= test_df.iloc[:,101].values.reshape(-1, 1)
-# group_test= test_df.iloc[:,102].values.reshape(-1, 1)
+df = load_ccle_data().dropna(axis=0)
+
+X = df.values[:, 0:100]
+y = df.values[:, 100].reshape(-1, 1)
+
+print(X.dtype)
+
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
 lr = args.adam_learn_rate
 batch_size = x_train.shape[0]
@@ -125,15 +130,15 @@ batch_size = x_train.shape[0]
 start = time.time()
 
 for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
-            [x_train, y_train], batch_size, key=loader_key)
-    ):
+        [x_train, y_train], batch_size, key=loader_key)
+                          ):
     z = allocate_model(models, xi, yi)
     y_pred = np.array([]).reshape(0, 1)
     y_true = np.array([]).reshape(0, 1)
     for i in range(args.k):
-        xi_, yi_= collect_data_groups(i, xi, yi, z)
+        xi_, yi_ = collect_data_groups(i, xi, yi, z)
         yi_pred, all_loss, smooth_loss, unpen_loss, models[i], opt_states[i], lr = make_step(
-                models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
+            models[i], optims[i], opt_states[i], xi_, yi_, lr, decay=args.decay)
         y_pred = jnp.concatenate([y_pred, yi_pred])
         y_true = jnp.concatenate([y_true, yi_])
 
@@ -141,6 +146,7 @@ for step, (xi, yi) in zip(range(args.n_epochs), dataloader(
 
     test_loss = TestLoss(models, x_test, y_test)
 
-    if  (step + 1) == args.n_epochs:
+    if (step + 1) == args.n_epochs:
         end = time.time()
-        print(f"{args.k}, {train_loss}, {test_loss},{args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end-start}")
+        print(
+            f"{args.k}, {train_loss}, {test_loss},{args.err_dist}, {args.n_train_obs}, {args.round}, {step + 1}, {end - start}")

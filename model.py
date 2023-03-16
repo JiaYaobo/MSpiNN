@@ -13,7 +13,7 @@ def identity(x):
     return x
 
 
-class FNN(eqx.Module):
+class FFN(eqx.Module):
     data_classes: int
     layer_sizes: Sequence[int]
     is_relu: int
